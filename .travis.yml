@@ -1,6 +1,19 @@
 language: ruby
 cache: bundler
-script: bundle exec middleman build
+env:
+  SLACK_WEBHOOK_URL=
+script: |
+  if test "$TRAVIS_EVENT_TYPE" != "cron"; then
+    bundle exec middleman build
+  else
+    echo "This is a cron build - release the spaniel!"
+    git clone https://github.com/alphagov/tech-docs-monitor
+    pushd tech-docs-monitor
+      export SITE_PAGE_API_URL=https://www.docs.verify.service.gov.uk/api/pages.json
+      export REALLY_POST_TO_SLACK=1
+      bundle install
+    popd
+  fi
 deploy:
   provider: cloudfoundry
   api: https://api.cloud.service.gov.uk
